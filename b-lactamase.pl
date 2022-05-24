@@ -1,7 +1,8 @@
 #########################################################################################################
 # Script: Take data from PubMLST and create an output with the class/family/b-lactamase that each 
 # 	isolate has.
-# Version: v1.2
+# Version: v1.3
+# Updates: Extract Family
 # Date: 24/05/2022
 # Author: Julia Moreno-Manjon
 #########################################################################################################
@@ -16,13 +17,9 @@ use 5.010;
 my ( $dir, $DEBUG, $filename );
 GetOptions(
 	'd|dir|directory=s'  => \$dir,
-	'i|input=s' => \$filename,
 	'db|debug' => \$DEBUG
 );
-#if ( !defined $filename ) {
-#	say "No filename passed. Use -i to pass input file.";
-#	exit;
-#
+
 if (!defined $dir){
 	$dir = '.';
 }
@@ -88,19 +85,19 @@ foreach my $key (sort keys %hash){ #For each key (aka b-lactam) in the hash, sor
 	foreach my $class (@{$hash{$key}}){ #and for each b-lactam in the array
 		$class_all .= sprintf "$class;"; #print the values of the locus inside
 	}
-	$class_all =~ s/_peptide//; #Delete "_peptide:" from "xxx_peptide"
-	$class_all =~ s/;ACIN.....;//; #Delete the ";" and everything after it
+	$class_all =~ s/_peptide;.*;//; #Delete "_peptide" and everything after it
 	
 	#FAMILY
 	my $family_all = "";
 	foreach my $family (@{$hash{$key}}){ #and for each b-lactam in the array
 		$family_all .= sprintf "$family;"; #print the values of the locus inside
 	}
-#	$family_all =~ s/ACIN.(//; #Delete "ACIN###(...)" from "ACIN###(xxx)"
-#	$family_all =~ s/)$//; 
-	$family_all =~ s/..._peptide;//; #Delete the ";" and everything before it
-	$family_all =~ s/;//; #Delete the ";"
+	$family_all =~ m/\((.*)\)/; #Match anything inside () -> it will be assigned $1
+	my $family_all_ext = $1;
 	
-	say "$class_all\t$family_all\t$key"; #Print the results
+	say "$class_all\t$family_all_ext\t$key"; #Print the results
 	
 }
+
+
+
