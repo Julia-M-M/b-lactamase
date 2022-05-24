@@ -1,7 +1,7 @@
 #########################################################################################################
 # Script: Take data from PubMLST and create an output with the class/family/b-lactamase that each 
 # 	isolate has.
-# Version: v1.1
+# Version: v1.2
 # Date: 24/05/2022
 # Author: Julia Moreno-Manjon
 #########################################################################################################
@@ -33,9 +33,10 @@ say "Beta-lactamases\nclass\tfamily\tbeta-lactamase";
 
 my %hash = (); #Create an empty hash
 
-my @files = glob("$dir/*") or die "ERROR $!";
-foreach my $files (@files) {
-	open( my $fh, '<', $files ) or die "ERROR $!"; #Open files in reading mode
+# Work with _peptide files
+my @files_pept = glob("$dir/*") or die "ERROR $!";
+foreach my $files_pept (@files_pept) {
+	open( my $fh, '<', $files_pept ) or die "ERROR $!"; #Open files in reading mode
 	while ( my $line = <$fh> ) {
 		chomp($line);
 		next if !$line; #Ignore empty lines
@@ -50,19 +51,56 @@ foreach my $files (@files) {
 			$hash{$comments} = (); #create a $comments key with an empty value 
 			push @{$hash{$comments}}, $locus; #and add the value $locus
 		}
+	}
+}
+
+# Work with ACIN files
+my @files_acin = glob("$dir/*") or die "ERROR $!";
+foreach my $files_acin (@files_acin) {
+	open( my $fh, '<', $files_acin ) or die "ERROR $!"; #Open files in reading mode
+	while ( my $line = <$fh> ) {
+		chomp($line);
+		next if !$line; #Ignore empty lines
+
+		my ( $locus, $allele_id, $sequence, $length, $type_allele, $comments, $source, $blact ) =
+	  		split /\t/, $line; #Columns in the file are split by tabs
 	
+		if ( $blact eq "" ) { #If there is no $blact value
+			next; #go to next line
+		}
+		else { #If there is a value
+			if (exists $hash{$blact}){ #If the key exists (aka blact)
+				push @{$hash{$blact}}, $locus; #add the value $locus at the end of the value list
+			}
+			else { #If the key does not exist
+				$hash{$blact} = (); #create a key with an empty value 
+				push @{$hash{$blact}}, $locus; #and add the value $locus
+			}
+		}
 	}
 }
 
 # Output
 foreach my $key (sort keys %hash){ #For each key (aka b-lactam) in the hash, sort them from lower to greater
-	my $loci_all = ""; #create an empty list
-	foreach my $loci (@{$hash{$key}}){ #and for each b-lactam in the array
-		$loci_all .= sprintf "$loci;"; #print the values of the locus inside
+	
+	# CLASS
+	my $class_all = ""; #create an empty list
+	foreach my $class (@{$hash{$key}}){ #and for each b-lactam in the array
+		$class_all .= sprintf "$class;"; #print the values of the locus inside
 	}
-	$loci_all =~ s/_peptide//; #Delete "_peptide:" from "xxx_peptide"
-	$loci_all =~ s/;$//; #Delete the ";" at the end od the string
-	say "$loci_all\tfamily\t$key"; #Print the results
+	$class_all =~ s/_peptide//; #Delete "_peptide:" from "xxx_peptide"
+	$class_all =~ s/;ACIN.....;//; #Delete the ";" and everything after it
+	
+	#FAMILY
+	my $family_all = "";
+	foreach my $family (@{$hash{$key}}){ #and for each b-lactam in the array
+		$family_all .= sprintf "$family;"; #print the values of the locus inside
+	}
+#	$family_all =~ s/ACIN.(//; #Delete "ACIN###(...)" from "ACIN###(xxx)"
+#	$family_all =~ s/)$//; 
+	$family_all =~ s/..._peptide;//; #Delete the ";" and everything before it
+	$family_all =~ s/;//; #Delete the ";"
+	
+	say "$class_all\t$family_all\t$key"; #Print the results
 	
 }
-
