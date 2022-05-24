@@ -1,7 +1,7 @@
 #########################################################################################################
 # Script: Take data from PubMLST and create an output with the class/family/b-lactamase that each 
 # 	isolate has.
-# Version: v0.1
+# Version: v1.1
 # Date: 24/05/2022
 # Author: Julia Moreno-Manjon
 #########################################################################################################
