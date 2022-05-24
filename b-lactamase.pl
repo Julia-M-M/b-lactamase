@@ -1,8 +1,8 @@
 #########################################################################################################
 # Script: Take data from PubMLST and create an output with the class/family/b-lactamase that each 
 # 	isolate has.
-# Version: v1.3
-# Updates: Extract Family
+# Version: v1.4
+# Updates: Fix table bugs
 # Date: 24/05/2022
 # Author: Julia Moreno-Manjon
 #########################################################################################################
@@ -66,12 +66,12 @@ foreach my $files_acin (@files_acin) {
 			next; #go to next line
 		}
 		else { #If there is a value
-			if (exists $hash{$blact}){ #If the key exists (aka blact)
-				push @{$hash{$blact}}, $locus; #add the value $locus at the end of the value list
-			}
-			else { #If the key does not exist
-				$hash{$blact} = (); #create a key with an empty value 
-				push @{$hash{$blact}}, $locus; #and add the value $locus
+			if (exists $hash{$blact} ){ #If the key exists (aka blact)
+				
+			
+				if (scalar(@{$hash{$blact}}) == 1){ #If the key only has one value
+					push @{$hash{$blact}}, $locus; #add the value $locus at the end of the value list
+				}
 			}
 		}
 	}
@@ -98,6 +98,3 @@ foreach my $key (sort keys %hash){ #For each key (aka b-lactam) in the hash, sor
 	say "$class_all\t$family_all_ext\t$key"; #Print the results
 	
 }
-
-
-
